@@ -24,9 +24,15 @@ class MyWindow : Window {
       mStride = mBmp.BackBufferStride;
       image.Source = mBmp;
       Content = image;
-
-      DrawMandelbrot (-0.5, 0, 1);
+      MouseDown += (object sender, MouseButtonEventArgs m) => {
+         lPts.Add (m.GetPosition (this));
+         if (lPts.Count == 2) {
+            DrawLine (); lPts.Clear ();
+         }
+      };
    }
+
+   List<Point> lPts = new ();
 
    void DrawMandelbrot (double xc, double yc, double zoom) {
       try {
@@ -86,6 +92,30 @@ class MyWindow : Window {
       }
    }
 
+   void DrawLine () {
+      try {
+         mBmp.Lock ();
+         mBase = mBmp.BackBuffer;
+         var pts = lPts.OrderBy (a => a.X).ToList ();
+         var startPt = pts[0];
+         var endPt = pts[1];
+         var stepsY = (startPt.Y - endPt.Y) / (startPt.X - endPt.X);
+         var stepsX = Math.Abs (1 / stepsY);
+         if (stepsX > 1) 
+            stepsX = 1;
+         if (Math.Abs (stepsY) > 1) 
+            stepsY /=  Math.Abs (stepsY);   
+         for (double i = startPt.X, j = startPt.Y; i <= endPt.X; i += stepsX, j += stepsY) 
+            SetPixel ((int)i, (int)j, 255);
+         int x = (int)startPt.X;
+         int y = (int)Math.Min (startPt.Y, endPt.Y);
+         int w = (int)endPt.X - x, h = (int)Math.Max (startPt.Y, endPt.Y) - y;
+         mBmp.AddDirtyRect (new (x, y, w, h));
+      } finally {
+         mBmp.Unlock ();
+      }
+   }
+   
    void SetPixel (int x, int y, byte gray) {
       unsafe {
          var ptr = (byte*)(mBase + y * mStride + x);

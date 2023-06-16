@@ -96,26 +96,26 @@ class MyWindow : Window {
       try {
          mBmp.Lock ();
          mBase = mBmp.BackBuffer;
-         var pts = lPts.OrderBy (a => a.X).ToList ();
-         var startPt = pts[0];
-         var endPt = pts[1];
-         var stepsY = (startPt.Y - endPt.Y) / (startPt.X - endPt.X);
-         var stepsX = Math.Abs (1 / stepsY);
-         if (stepsX > 1) 
-            stepsX = 1;
-         if (Math.Abs (stepsY) > 1) 
-            stepsY /=  Math.Abs (stepsY);   
-         for (double i = startPt.X, j = startPt.Y; i <= endPt.X; i += stepsX, j += stepsY) 
-            SetPixel ((int)i, (int)j, 255);
-         int x = (int)startPt.X;
-         int y = (int)Math.Min (startPt.Y, endPt.Y);
-         int w = (int)endPt.X - x, h = (int)Math.Max (startPt.Y, endPt.Y) - y;
-         mBmp.AddDirtyRect (new (x, y, w, h));
+         var startPt = lPts[0].X < lPts[1].X ? lPts[0] : lPts[1];
+         var endPt = lPts[0] != startPt ? lPts[0] : lPts[1];
+         int X1 = (int)startPt.X, X2 = (int)endPt.X;
+         int Y1 = (int)startPt.Y, Y2 = (int)endPt.Y;
+         int xDiff = X2 - X1, yDiff = Y2 > Y1 ? Y2 - Y1 : Y1 - Y2;
+         int yInc = (Y2 > Y1 ? 1 : -1);
+         int i = X1, j = Y1;
+         int pixel = 1;
+         for (; i < X2; pixel++) {
+            i += yDiff > 0 && pixel * xDiff % yDiff == 0 ? 1 : 0;
+            j += xDiff > 0 && pixel * yDiff % xDiff == 0 ? yInc : 0;
+            SetPixel (i, j, 255);
+            mBmp.AddDirtyRect (new (i, j, 1, 1));
+         }
+         //mBmp.AddDirtyRect (new (X1, yInc is 1 ? Y1 : Y2, xDiff, yDiff));
       } finally {
          mBmp.Unlock ();
       }
    }
-   
+
    void SetPixel (int x, int y, byte gray) {
       unsafe {
          var ptr = (byte*)(mBase + y * mStride + x);

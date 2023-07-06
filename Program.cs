@@ -8,7 +8,7 @@ namespace A25;
 
 class MyWindow : Window {
    public MyWindow () {
-      Width = 800; Height = 600;
+      Width = 900; Height = 600;
       Left = 50; Top = 50;
       WindowStyle = WindowStyle.None;
       mBmp = new GrayBMP (Width, Height);
@@ -25,6 +25,15 @@ class MyWindow : Window {
 
 
       DrawMandelbrot (-0.5, 0, 1);
+   }
+   
+   void LeafFill (string file) {      
+      PolyFill p = new ();
+      foreach (var line in File.ReadAllLines (file)) { 
+         var items = line.Split (' '); 
+         p.AddLine (int.Parse (items[0]), int.Parse (items[1]), int.Parse (items[2]), int.Parse (items[3])); 
+      }
+      p.Fill (mBmp, 255);
    }
 
    void DrawMandelbrot (double xc, double yc, double zoom) {

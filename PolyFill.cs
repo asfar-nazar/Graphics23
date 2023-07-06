@@ -30,8 +30,8 @@ namespace A25 {
          double c1 = X1 * dY - Y1 * dX;
          double b2 = width;
          double c2 = -lY * width;
-         double d = dY * b2;
-         Point2 pInt = new Point2 ((dX * c2 + b2 * c1) / d, -c2 * dY / d);
+         double d = -dY * b2;
+         Point2 pInt = new ((dX * c2 - b2 * c1) / d, c2 * dY / d);
          if (dX < 0) (X1, X2) = (X2, X1);
          if (dY < 0) (Y1, Y2) = (Y2, Y1);
          if (pInt.X >= X1 && pInt.X <= X2 && pInt.Y >= Y1 && pInt.Y<=Y2) return pInt;

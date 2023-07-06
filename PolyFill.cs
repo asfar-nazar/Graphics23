@@ -24,6 +24,7 @@ namespace A25 {
       /// <returns></returns>
       static Point2 ScanLnIntersection (Point2 p1, Point2 p2, double width, double lY) {
          lY += 0.5;
+         if (p1.Y < lY && p2.Y < lY || p1.Y > lY && p2.Y > lY) return new (double.NaN, double.NaN);
          double X1 = p1.X, Y1 = p1.Y, X2 = p2.X, Y2 = p2.Y;
          double dY = Y2 - Y1, dX = X2 - X1; 
          if (Math.Abs (dY) < DELTA && Math.Abs (dX) < DELTA) return new (double.NaN, double.NaN);

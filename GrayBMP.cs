@@ -77,6 +77,59 @@ class GrayBMP {
       unsafe { *(byte*)ptr = (byte)gray; };
       End ();
    }
+   
+   /// <summary>Clear the bmp with the given color</summary>
+   public void Clear (int gray) {
+      Begin ();
+      unsafe {
+         byte* ptr = (byte*)Buffer;
+         System.Runtime.CompilerServices.Unsafe.InitBlock (ref *ptr, (byte)gray, (uint)(mHeight * mStride));
+      }
+      End ();
+   }
+
+   /// <summary>Draw a line b/w two points (x0, y0) and (x1, y1)</summary>
+   /// <param name="gray">Color of the line</param>
+   public void DrawLine (int x0, int y0, int x1, int y1, int gray) {
+      Begin ();
+      Check (x0, y0); Check (x1, y1);
+      Dirty (x0, y0); Dirty (x1, y1);
+      int dx = Math.Abs (x0 - x1), dy = -Math.Abs (y0 - y1);
+      int stepX = x0 > x1 ? -1 : 1, stepY = y0 < y1 ? -1 : 1;
+      int stepYPtr = mStride * stepY, error = dx + dy;
+      byte bGray = (byte)gray; 
+      unsafe {
+         byte* ptr = (byte * )(Buffer + y0 * mStride + x0);
+         while (true) {
+            *ptr = bGray;
+            if (x1 == x0 && y0 == y1) break;
+            int delta = 2 * error;
+            if (delta >= dy) {
+               if (x0 == x1) break;
+               x0 += stepX; ptr += stepX;
+            }
+            if (delta <= dx) { 
+            if (y0 == y1) break;
+            y0 += stepY; ptr += stepYPtr;
+            }
+         }
+      };
+      End ();
+   }
+
+   /// <summary>Draw a horizontal line b/w two points (x0, y) and (x1, y)</summary>
+   /// <param name="gray">Color of the line</param>
+   public void DrawHorizontalLine (int x0, int x1, int y, int gray) {
+      Begin (); Check (x0, y); Check (x1, y);
+      Dirty (x0, y); Dirty (x1, y);
+      if (x1 < x0) (x1, x0) = (x0, x1);
+      byte bGray = (byte)gray;
+      unsafe {
+         byte* ptr = (byte*)(Buffer + y * mStride + x0);
+         System.Runtime.CompilerServices.Unsafe.InitBlock (ref *ptr, (byte)gray, (uint)(x1 - x0));
+      };
+      End ();
+   }
    #endregion
 
    #region Implementation ----------------------------------

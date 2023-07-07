@@ -105,6 +105,20 @@ class GrayBMP {
       End ();
    }
 
+   /// <summary>Draw a horizontal line b/w two points (x0, y) and (x1, y)</summary>
+   /// <param name="gray">Color of the line</param>
+   public void DrawHorizontalLine (int x1, int x2, int y, int gray) {
+      Begin (); Check (x1, y); Check (x2, y);
+      Dirty (x1, y); Dirty (x2, y);
+      if (x2 < x1) (x2, x1) = (x1, x2);
+      byte bGray = (byte)gray;
+      unsafe {
+         byte* ptr = (byte*)(Buffer + y * mStride + x1 - 1);
+         System.Runtime.CompilerServices.Unsafe.InitBlock (ref *ptr, (byte)gray, (uint)(x2 - x1));
+      };
+      End ();
+   }
+
    /// <summary>Call End after finishing the update of the bitmap</summary>
    public void End () {
       if (--mcLocks == 0) {

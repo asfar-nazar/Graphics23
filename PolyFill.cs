@@ -12,38 +12,34 @@ using System.IO;
 namespace GrayBMP {
 
    class PolyFill {
-      public void AddLine (int x0, int y0, int x1, int y1) => mLines.Add (new (new (x0, y0), new (x1, y1)));
+      public void AddLine (int x0, int y0, int x1, int y1) {
+         if ((x0, y0) == (x1, y1)) return;
+         mLines.Add (new (new (x0, y0), new (x1, y1))); 
+      }
 
       /// <summary> Draw all mLines to the bmp and fill all closed polylines with the given color </summary>
       public void Fill (GrayBMP bmp, int color) {
          for (int i = 0; i < bmp.Height; i++) {
-            var lPts = mLines.Select (a => ScanLnIntersection (a.Item1, a.Item2, bmp.Width, i)).Where (a => a.X is not double.NaN).ToList ();
-            if (lPts.Count > 0 && lPts.Count % 2 == 0)
-               for (int j = 0; j < lPts.Count; j += 2)
-                  bmp.DrawHorizontalLine ((int)lPts[j].X, (int)lPts[j + 1].X, i, 255);
+            var iPts = mLines.Select (a => ScanLnIntersection (a.Item1, a.Item2, i)).Where (a => a is not double.NaN).OrderBy (a => a).ToList ();
+            if (iPts.Count > 0 && iPts.Count % 2 == 0)
+               for (int j = 0; j < iPts.Count; j += 2)
+                  bmp.DrawHorizontalLine ((int)iPts[j], (int)iPts[j + 1], i, 255);
          }
       }
 
       /// <summary> Find intersection point of a given line segment with a scan line at height lY </summary>
       /// <param name="p1">Start point of line</param>
       /// <param name="p2">End point of line</param>
-      /// <param name="width">Width of the screen</param>
-      /// <param name="lY">Height of the scan line</param>
-      static Point2 ScanLnIntersection (Point2 p1, Point2 p2, double width, double lY) {
-         lY += 0.5;
-         if (p1.Y < lY && p2.Y < lY || p1.Y > lY && p2.Y > lY) return new (double.NaN, double.NaN);
+      /// <param name="sY">Height of the scan line</param>
+      static double ScanLnIntersection (Point2 p1, Point2 p2, double sY) {
          double X1 = p1.X, Y1 = p1.Y, X2 = p2.X, Y2 = p2.Y;
          double dY = Y2 - Y1, dX = X2 - X1;
-         if (Math.Abs (dY) < DELTA && Math.Abs (dX) < DELTA) return new (double.NaN, double.NaN);
-         double c1 = X1 * dY - Y1 * dX;
-         double b2 = width;
-         double c2 = -lY * width;
-         double d = -dY * b2;
-         Point2 pInt = new ((dX * c2 - b2 * c1) / d, c2 * dY / d);
-         if (dX < 0) (X1, X2) = (X2, X1);
+         if (dY == 0) return double.NaN;
+         sY += 0.5;
+         double xS = (dX != 0 ? (sY - Y1) * dX / dY : 0) + X1;
          if (dY < 0) (Y1, Y2) = (Y2, Y1);
-         if (pInt.X >= X1 && pInt.X <= X2 && pInt.Y >= Y1 && pInt.Y <= Y2) return pInt;
-         return new (double.NaN, double.NaN);
+         if (sY < Y1 || sY > Y2) return double.NaN;
+         return xS;
       }
 
       struct Point2 {

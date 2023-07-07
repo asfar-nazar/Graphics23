@@ -113,7 +113,7 @@ class GrayBMP {
       if (x2 < x1) (x2, x1) = (x1, x2);
       byte bGray = (byte)gray;
       unsafe {
-         byte* ptr = (byte*)(Buffer + y * mStride + x1);
+         byte* ptr = (byte*)(Buffer + y * mStride + x1 - 1);
          System.Runtime.CompilerServices.Unsafe.InitBlock (ref *ptr, (byte)gray, (uint)(x2 - x1));
       };
       End ();

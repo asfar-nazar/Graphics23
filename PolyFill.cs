@@ -68,11 +68,14 @@ namespace GrayBMP {
       static double ScanLnIntersection (Point2 p1, Point2 p2, double sY) {
          double X1 = p1.X, Y1 = p1.Y, X2 = p2.X, Y2 = p2.Y;
          double dY = Y2 - Y1, dX = X2 - X1;
+         // If line is above or below the scan line no intersection is possible
          if (Y1 < sY && Y2 < sY || Y1 > sY && Y2 > sY) return double.NaN;
+         // No intersection if the line is parallel to scan line
          if (dY == 0) return double.NaN;
          sY += 0.5;
          double xS = (dX != 0 ? (sY - Y1) * dX / dY : 0) + X1;
          if (dY < 0) (Y1, Y2) = (Y2, Y1);
+         // If the point of intersection is above or below the line segment -> not an intersection
          if (sY < Y1 || sY > Y2) return double.NaN;
          return xS;
       }

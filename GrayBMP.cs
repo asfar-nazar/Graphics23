@@ -135,7 +135,9 @@ class GrayBMP {
       double length = Sqrt (dx * dx + dy * dy);
       double iLength = width / (2 * length);
       double xDelta = dy * iLength;
+      double hXDelta = xDelta * 0.5;
       double yDelta = dx * iLength;
+      double hYDelta = yDelta * 0.5;
       double sF = 0.86602 * iLength + 1; 
       var midVec = (x: dx * sF, y: dy * sF);
 
@@ -145,23 +147,24 @@ class GrayBMP {
       int X3 = (int)(x1 + xDelta + 0.5), Y3 = (int)(y1 - yDelta + 0.5);
 
       double XMid = x1 - midVec.x, YMid = y1 - midVec.y;
-      int X4 = (int)(XMid - xDelta/2 + 0.5), Y4 = (int) (YMid + yDelta/2 + 0.5);
-      int X5 = (int)(XMid + xDelta/2 + 0.5), Y5 = (int)(YMid - yDelta/2 + 0.5);
+      int X4 = (int)(XMid - hXDelta + 0.5), Y4 = (int)(YMid + hYDelta + 0.5);
+      int X5 = (int)(XMid + hXDelta + 0.5), Y5 = (int)(YMid - hYDelta + 0.5);
       XMid = x0 + midVec.x; YMid = y0 + midVec.y;
-      int X6 = (int)(XMid - xDelta/2 + 0.5), Y6 = (int)(YMid + yDelta/2 + 0.5);
-      int X7 = (int)(XMid + xDelta/2 + 0.5), Y7 = (int)(YMid - yDelta/2 + 0.5);
+      int X6 = (int)(XMid - hXDelta + 0.5), Y6 = (int)(YMid + hYDelta + 0.5);
+      int X7 = (int)(XMid + hXDelta + 0.5), Y7 = (int)(YMid - hYDelta + 0.5);
+      mPF.Reset ();
+      mPF.AddLine (X0, Y0, X1, Y1);
+      mPF.AddLine (X2, Y2, X3, Y3);
 
-      DrawLine (X0, Y0, X1, Y1, color);
-      DrawLine (X2, Y2, X3, Y3, color);
-
-      DrawLine (X1, Y1, X6, Y6, color);
-      DrawLine (X6, Y6, X7, Y7, color);
-      DrawLine (X7, Y7, X3, Y3, color);
-      DrawLine (X0, Y0, X4, Y4, color);
-      DrawLine (X4, Y4, X5, Y5, color);
-      DrawLine (X5, Y5, X2, Y2, color);
+      mPF.AddLine (X1, Y1, X6, Y6);
+      mPF.AddLine (X6, Y6, X7, Y7);
+      mPF.AddLine (X7, Y7, X3, Y3);
+      mPF.AddLine (X0, Y0, X4, Y4);
+      mPF.AddLine (X4, Y4, X5, Y5);
+      mPF.AddLine (X5, Y5, X2, Y2);
+      mPF.Fill (this, 0);
    }
-
+   PolyFillFast mPF = new ();
    /// <summary>Call End after finishing the update of the bitmap</summary>
    public void End () {
       if (--mcLocks == 0) {

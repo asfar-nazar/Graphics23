@@ -126,6 +126,42 @@ class GrayBMP {
       End ();
    }
 
+   /// <summary>
+   /// Draws a polygon centered on the line (between the two given end-points) of given width
+   /// </summary>
+   public void DrawThickLine (int x0, int y0, int x1, int y1, int width, int color) {
+      if (x0 > x1) (x0, y0, x1, y1) = (x1, y1, x0, y0);
+      double dx = x1 - x0, dy = y1 - y0;
+      double length = Sqrt (dx * dx + dy * dy);
+      double iLength = width / (2 * length);
+      double xDelta = dy * iLength;
+      double yDelta = dx * iLength;
+      double sF = 0.86602 * iLength + 1; 
+      var midVec = (x: dx * sF, y: dy * sF);
+
+      int X0 = (int)(x0 - xDelta + 0.5), Y0 = (int)(y0 + yDelta + 0.5);
+      int X1 = (int)(x1 - xDelta + 0.5), Y1 = (int)(y1 + yDelta + 0.5);
+      int X2 = (int)(x0 + xDelta + 0.5), Y2 = (int)(y0 - yDelta + 0.5);
+      int X3 = (int)(x1 + xDelta + 0.5), Y3 = (int)(y1 - yDelta + 0.5);
+
+      double XMid = x1 - midVec.x, YMid = y1 - midVec.y;
+      int X4 = (int)(XMid - xDelta/2 + 0.5), Y4 = (int) (YMid + yDelta/2 + 0.5);
+      int X5 = (int)(XMid + xDelta/2 + 0.5), Y5 = (int)(YMid - yDelta/2 + 0.5);
+      XMid = x0 + midVec.x; YMid = y0 + midVec.y;
+      int X6 = (int)(XMid - xDelta/2 + 0.5), Y6 = (int)(YMid + yDelta/2 + 0.5);
+      int X7 = (int)(XMid + xDelta/2 + 0.5), Y7 = (int)(YMid - yDelta/2 + 0.5);
+
+      DrawLine (X0, Y0, X1, Y1, color);
+      DrawLine (X2, Y2, X3, Y3, color);
+
+      DrawLine (X1, Y1, X6, Y6, color);
+      DrawLine (X6, Y6, X7, Y7, color);
+      DrawLine (X7, Y7, X3, Y3, color);
+      DrawLine (X0, Y0, X4, Y4, color);
+      DrawLine (X4, Y4, X5, Y5, color);
+      DrawLine (X5, Y5, X2, Y2, color);
+   }
+
    /// <summary>Call End after finishing the update of the bitmap</summary>
    public void End () {
       if (--mcLocks == 0) {

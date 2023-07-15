@@ -15,12 +15,14 @@ class PolyFillWin : Window {
       Left = 200; Top = 50; WindowStyle = WindowStyle.None;
 
       mBmp = new GrayBMP (Width * mScale, Height * mScale);
+      mBmpS = new GrayBMP (Width, Height);
       Image image = new () {
          Stretch = Stretch.Fill,
          HorizontalAlignment = HorizontalAlignment.Left,
          VerticalAlignment = VerticalAlignment.Top,
-         Source = mBmp.Bitmap
+         Source = mBmpS.Bitmap
       };
+      
       RenderOptions.SetBitmapScalingMode (image, BitmapScalingMode.HighQuality);
       RenderOptions.SetEdgeMode (image, EdgeMode.Unspecified);
       Content = image;
@@ -32,13 +34,18 @@ class PolyFillWin : Window {
       timer.Tick += NextFrame;
    }
    readonly GrayBMP mBmp;
+   readonly GrayBMP mBmpS;
    readonly int mScale = 16;
 
    void NextFrame (object s, EventArgs e) {
       using (new BlockTimer ("Leaf")) {
-         mBmp.Begin ();
+         var ptr = mBmp.Begin ();
          DrawLeaf ();
+         var ptr1 = mBmpS.Begin ();
+         mBmpS.Clear (192);
+         DownScaleImage (ptr, ptr1, mScale);
          mBmp.End ();
+         mBmpS.End ();
       }
    }
 
@@ -59,6 +66,25 @@ class PolyFillWin : Window {
       mBmp.End ();
    }
    PolyFillFast mPF = new ();
+
+   void DownScaleImage (nint ptr, nint ptr1, int mScale) {
+      unsafe {       
+         for (int i = 0; i < mBmpS.Width; i++) {
+            for (int j = 0; j < mBmpS.Height; j++) {
+               var dest = ptr1 + j * mBmpS.Stride + i;
+               int value = 0;
+               int sRow = i * 16, sCol = j * 16;
+               for (int k = sRow; k < sRow + 16; k++) {
+                  for (int l = sCol; l < sCol + 16; l++) {
+                     value += *(byte*)(ptr + l * mBmp.Stride + k);
+                  }
+               }
+               *(byte*)dest = (byte)(value / 256);
+            }
+         }
+
+      }
+   }
 
    Drawing LoadDrawing () {
       Drawing dwg = new ();

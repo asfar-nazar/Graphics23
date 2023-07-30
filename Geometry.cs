@@ -17,11 +17,21 @@ readonly record struct Complex (double X, double Y) {
 }
 
 /// <summary>A point in 2D space, with double-precision coordinates (X, Y)</summary>
-readonly record struct Point2 (double X, double Y) {
+readonly record struct Point2 (double X, double Y): IComparable<Point2> {
    public (int X, int Y) Round () => ((int)(X + 0.5), (int)(Y + 0.5));
 
    public double AngleTo (Point2 b) => Math.Atan2 (b.Y - Y, b.X - X);
    public Point2 RadialMove (double r, double th) => new (X + r * Cos (th), Y + r * Sin (th));
+
+   public int CompareTo (Point2 b) {
+      if (Y > b.Y) return -1;
+      else if (Y < b.Y) return 1;
+      else {
+         if (X < b.X) return -1;
+         else if (X > b.X) return 1;
+         else return 0;
+      }
+   }
 
    public static Vector2 operator - (Point2 a, Point2 b) => new (a.X - b.X, a.Y - b.Y);
    public static Point2 operator + (Point2 p, Vector2 v) => new (p.X + v.X, p.Y + v.Y);
@@ -130,6 +140,10 @@ class Polygon {
 class Drawing {
    public void Add (Polygon poly) {
       mPolys.Add (poly);
+      if (mConvexHull.Count > 0) { 
+         mConvexHull.AddRange (poly.Pts); 
+         ComputeConvexHull (mConvexHull); 
+      }
       mBound = new (); 
    }
 
@@ -144,14 +158,46 @@ class Drawing {
 
    public Bound2 Bound {
       get {
-         if (mBound.IsEmpty) mBound = new (Polys.Select (a => a.Bound));
+         if (mBound.IsEmpty) mBound = new (ConvexHull);
          return mBound;
       }
    }
    Bound2 mBound;
 
-   public Bound2 GetBound (Matrix2 xfm) 
-      => new Bound2 (Polys.SelectMany (a => a.Pts.Select (p => p * xfm)));
+   IReadOnlyList<Point2> ConvexHull { 
+      get {
+         if (!mConvexHull.Any ()) ComputeConvexHull (Polys.SelectMany (a => a.Pts));
+         return mConvexHull;
+      } 
+   }
+   List<Point2> mConvexHull = new ();
+
+   void ComputeConvexHull (IEnumerable<Point2> pts) {
+      Point2 mPtY = pts.Min ();
+      List<Point2> mCH = new ();
+      List<Point2> tpts = pts.OrderBy (mPtY.AngleTo).ToList ();
+      mCH.Add (mPtY);
+      foreach (var p in tpts) {
+         mCH.Add (p);
+         CheckLastAngle ();
+      }
+
+      void CheckLastAngle () {
+         int count = mCH.Count;
+         while (count > 3) {
+            Vector2 v1 = new (mCH[count - 1].X - mCH[count - 2].X, mCH[count - 1].Y - mCH[mCH.Count - 2].Y);
+            Vector2 v2 = new (mCH[count - 2].X - mCH[count - 3].X, mCH[count - 2].Y - mCH[mCH.Count - 3].Y);
+            if (v2.ZCross (v1) <= 0) 
+               mCH.RemoveAt (count - 2);
+            else break;
+            count = mCH.Count;
+         }
+      }
+      mConvexHull = mCH;
+   }
+
+   public Bound2 GetBound (Matrix2 xfm)
+      => new Bound2 (ConvexHull.Select (a => a * xfm));
 
    /// <summary>Enumerate all the lines in this drawing</summary>
    public IEnumerable<(Point2 A, Point2 B)> EnumLines (Matrix2 xfm) 

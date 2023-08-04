@@ -10,6 +10,7 @@ using static System.Math;
 #region class GrayBitmap -------------------------------------------------------
 /// <summary>Implements a writeable grayscale bitmap</summary>
 class GrayBMP {
+
    #region Constructor --------------------------------------
    /// <summary>Constructs a grayscale (8 bits-per-pixel) bitmap of given size</summary>
    public GrayBMP (double width, double height) {
